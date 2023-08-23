@@ -1,22 +1,26 @@
 const { ethers } = require("ethers");
+const {
+  abi: IUniswapV3PoolABI,
+} = require("@uniswap/v3-core/artifacts/contracts/interfaces/IUniswapV3Pool.sol/IUniswapV3Pool.json");
+const {
+  abi: SwapRouterABI,
+} = require("@uniswap/v3-periphery/artifacts/contracts/interfaces/ISwapRouter.sol/ISwapRouter.json");
 const ERC20ABI = require("./ERC20ABI.json");
-const SwapRouterABI = require("./SwapRouterABI.json");
 require("dotenv").config();
 
 const QUICKNODE_URL_TESTNET = process.env.QUICKNODE_URL_TESTNET;
 const WALLET_ADDRESS = process.env.WALLET_ADDRESS;
 const WALLET_SECRET = process.env.WALLET_SECRET;
 
-const provider = new ethers.providers.JsonRpcProvider(QUICKNODE_URL_TESTNET); // Sepolia
-const swapRouterAddress = "0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD";
+const provider = new ethers.providers.JsonRpcProvider(QUICKNODE_URL_TESTNET); // Mumbai
+const swapRouterAddress = "0xE592427A0AEce92De3Edee1F18E0157C05861564";
 
-const address0 = "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14"; // WETH
-const address1 = "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984"; // UNI
+const address0 = "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889"; // WMATIC Mumbai
+const address1 = "0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa"; // WETH Mumbai
 
 async function main() {
   const wallet = new ethers.Wallet(WALLET_SECRET);
   const connectedWallet = wallet.connect(provider);
-  console.log(await provider.getBalance(connectedWallet.address));
 
   const swapRouterContract = new ethers.Contract(
     swapRouterAddress,
@@ -24,8 +28,11 @@ async function main() {
     provider
   );
 
-  const inputAmount = 0.1;
+  const inputAmount = 2;
   const amountIn = ethers.utils.parseUnits(inputAmount.toString(), 18);
+
+  const inputAmountX = 1;
+  const amountInX = ethers.utils.parseUnits(inputAmountX.toString(), 18);
 
   const approvalAmount = amountIn.toString();
   const tokenContract0 = new ethers.Contract(address0, ERC20ABI, provider);
@@ -39,13 +46,14 @@ async function main() {
     fee: 3000,
     recipient: WALLET_ADDRESS,
     deadline: Math.floor(Date.now() / 1000) + 60 * 10,
-    amountIn: amountIn,
+    amountIn: amountInX,
     amountOutMinimum: 0,
     sqrtPriceLimitX96: 0,
   };
-  console.log(swapRouterContract);
+
   const transaction = swapRouterContract
-    .execute(params, {
+    .connect(connectedWallet)
+    .exactInputSingle(params, {
       gasLimit: ethers.utils.hexlify(1000000),
     })
     .then((transaction) => {
