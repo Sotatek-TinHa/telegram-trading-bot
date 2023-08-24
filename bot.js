@@ -1,25 +1,23 @@
-const token = "6387272222:AAH8oa1ZZRW_pM87TeoLCpRZhkWk4lSoFrU";
-let TelegramBot = require("node-telegram-bot-api");
-let bot = new TelegramBot(token, { polling: true });
+import TelegramBot from "node-telegram-bot-api";
+import { createWallet } from "./createWallet.js";
+import "dotenv/config";
 
-// Matches "/echo [whatever]"
-bot.onText(/\/echo(.+)/, (msg, match) => {
-  // The 'msg' is the received Message from Telegram
-  // and 'match' is the result of executing the regexp
-  // above on the text content of the message
+// Bot init
+const BOT_TOKEN = process.env.BOT_TOKEN;
+let bot = new TelegramBot(BOT_TOKEN, { polling: true });
 
-  let chatId = msg.chat.id;
-
-  // The captured "whatever"
-  let resp = match[1];
-
-  // send back the matched "whatever" to the chat
-  bot.sendMessage(chatId, resp);
-});
-
-// newMessage command
-bot.onText(/\/newMessage/, function (msg) {
+// newWallet command
+bot.onText(/\/newWallet/, function (msg) {
   console.log("Received an request");
-  bot.sendMessage(msg.chat.id, "data");
+
+  // Get new wallet mnemonic phrase and wallet address
+  const wallet = createWallet();
+  console.log(wallet);
+
+  // Send message
+  let chatId = msg.chat.id;
+  const message = `Please save your 12-word seed phrase: ${wallet.mnemonic.phrase} \n\nYour wallet address: ${wallet.wallet.address}`;
+  bot.sendMessage(msg.chat.id, message);
+
   console.log("Sent the response successfully");
 });
