@@ -1,8 +1,9 @@
 import { Wallet, ethers } from "ethers";
-import "dotenv/config";
+import * as dotenv from 'dotenv';
+dotenv.config();
 
-const QUICKNODE_URL_TESTNET = process.env.QUICKNODE_URL_TESTNET;
-const provider = new ethers.providers.JsonRpcProvider(QUICKNODE_URL_TESTNET); // Mumbai
+const FULLNODE_MATIC_MUMBAI = process.env.FULLNODE_MATIC_MUMBAI;
+const provider = new ethers.providers.JsonRpcProvider(FULLNODE_MATIC_MUMBAI); // Mumbai
 
 export const createWallet = () => {
   const mnemonic = Wallet.createRandom().mnemonic;
